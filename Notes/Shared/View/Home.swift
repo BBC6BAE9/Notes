@@ -25,10 +25,16 @@ struct Home: View {
                         .frame(width: 1)
    
                 }
-                MainContent()
             }
-        }.ignoresSafeArea()
+            MainContent()
+        }
+        #if os(macOS)
+        .ignoresSafeArea()
+        #endif
         .frame(width: isMacOS() ? getRect().width / 1.5 : nil, height: isMacOS() ? getRect().height - 250 : nil, alignment: .leading)
+        #if os(iOS)
+        .overlay(sideBar())
+        #endif
         .background(Color("BG").ignoresSafeArea())
         .preferredColorScheme(.light)
     }
@@ -36,27 +42,46 @@ struct Home: View {
     @ViewBuilder
     func sideBar() -> some View {
         VStack{
-            Text("Pocket")
-                .font(.title2)
-                .fontWeight(.semibold)
-            AddBtn()
+            
+            if isMacOS() {
+                Text("Pocket")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+            }
+            
+            if isMacOS() {
+                AddBtn().zIndex(1)
+            }
             
             VStack(spacing: 15){
                 let colors = [Color("Skin"),Color("Orange"),Color("Purple"),Color("Blue"),Color("green")]
                 ForEach(colors, id: \.self){ color in
                     Circle().fill(color)
-                        .frame(width: 20, height: 20)
+                        .frame(width: isMacOS() ? 20 : 25, height:  isMacOS() ? 20 : 25)
                     
                 }
             }
             .padding(.top, 20)
             .frame(height: showColors ? nil : 0)
             .opacity(showColors ? 1 : 0)
+            .zIndex(0)
+            if !isMacOS() {
+                AddBtn().zIndex(1)
+            }
         }
+        #if os(macOS)
         .frame(maxHeight: .infinity, alignment: .top)
         .padding(.vertical)
         .padding(.horizontal, 22)
         .padding(.top, 35)
+        .zIndex(0)
+        #else
+        .frame(maxWidth: .infinity, maxHeight: .infinity,  alignment: .bottomTrailing)
+        .padding()
+        .background(BlurView(style: .systemUltraThinMaterial)
+            .opacity(showColors ? 1 : 0)
+            .ignoresSafeArea())
+        #endif
     }
     
     @ViewBuilder
@@ -66,11 +91,20 @@ struct Home: View {
                 Image(systemName: "magnifyingglass")
                     .font(.title3)
                     .foregroundColor(.gray)
-                
+
                 TextField("search", text: .constant(""))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, isMacOS() ? 0 : 10)
+            .overlay(
+                Rectangle().fill(Color.gray.opacity(0.15))
+                    .frame(height: 1)
+                    .padding(.horizontal, -25)
+                    .offset(y: 6),
+                
+                
+                alignment: .bottom
+            )
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 15){
      
